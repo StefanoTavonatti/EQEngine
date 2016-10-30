@@ -1,12 +1,15 @@
 package tavonatti.stefano.eqengine;
 
+import tavonatti.stefano.eqengine.exceptions.DublicatedVariableException;
 import tavonatti.stefano.eqengine.exceptions.ParsingException;
 import tavonatti.stefano.eqengine.exceptions.UndefinedVariable;
 
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -14,7 +17,8 @@ import java.util.regex.Pattern;
  * Created by stefano on 30/10/16.
  */
 public class Parser {
-    ScriptEngine engine;
+    private ScriptEngine engine;
+    private List<Function> functions=new ArrayList<>();//TODO checks duplicate
 
     public Parser() throws ScriptException {
         ScriptEngineManager manager;
@@ -23,12 +27,12 @@ public class Parser {
         //Object result = engine.eval("4*5");
     }
 
-    public String eval(String script) throws UndefinedVariable, ParsingException {
+    public String eval(String script) throws UndefinedVariable, ParsingException, ScriptException, DublicatedVariableException {
         HashMap<String,String> hm=new HashMap<>();
         return eval(script,hm);
     }
 
-    public String eval(String script, HashMap<String,String> args) throws UndefinedVariable, ParsingException {
+    public String eval(String script, HashMap<String,String> args) throws UndefinedVariable, ParsingException, ScriptException, DublicatedVariableException {
         String lines[]=script.split("\n");
 
         //Pattern function=Pattern.compile("\\s*\\t*function\\s*\\t*[A-Za-z]+\\([A-Za-z]\\)");
@@ -43,9 +47,14 @@ public class Parser {
 
 
         Pattern returnPatter=Pattern.compile("return");
+        //match function like function name($arg1,$arg2,..):
+        Pattern function=Pattern.compile("[\\s\\t]*function[\\s\\t]*[A-Za-z0-9]+[\\s\\t]*\\(([\\s\\t]*\\$[A-Za-z0-9]+[\\s\\t]*,)*\\):");
 
 
-        for(String line:lines){
+        //for(String line:lines){
+        for(int i=0;i<lines.length;i++){
+            String line=lines[i];
+
             Matcher returnMatcher=returnPatter.matcher(line);
             if(returnMatcher.find()){
                 String st=line.replaceAll(returnMatcher.group(0),"");
@@ -53,11 +62,52 @@ public class Parser {
                 return evalLine(st,args);
             }
             else{
-                evalLine(line,args);
+                Matcher funcMatcher=function.matcher(line);
+                if(funcMatcher.find()){
+                    String func=funcMatcher.group(0);
+                    int funcLevel=getLevel(func);
+
+                    int j=i;
+                    boolean cont=true;
+
+                    String code="";
+
+                    for(j=i+1;j<lines.length && cont;j++){
+                        String l=lines[j];
+                        if(getLevel(l)>funcLevel){
+                            code+=l+"\n";
+                        }
+                        else{
+                            cont=false;
+                        }
+                    }
+
+                    i=j-1;
+
+                    functions.add(Function.createFunction(func,code));
+
+                }
+                else {
+                    evalLine(line, args);
+                }
             }
         }
 
         return null;
+    }
+
+    /**
+     * Return the number of \t in fron of line
+     * @return
+     */
+    private int getLevel(String line){
+        int count=0;
+
+        while (line.charAt(count+1)=='\t'){
+            count++;
+        }
+
+        return count;
     }
 
     private String evalLine(String line, HashMap<String,String> vars) throws UndefinedVariable, ParsingException {
