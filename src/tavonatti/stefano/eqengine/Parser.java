@@ -48,7 +48,7 @@ public class Parser {
 
         Pattern returnPatter=Pattern.compile("return");
         //match function like function name($arg1,$arg2,..):
-        Pattern function=Pattern.compile("[\\s\\t]*function[\\s\\t]*[A-Za-z0-9]+[\\s\\t]*\\(([\\s\\t]*\\$[A-Za-z0-9]+[\\s\\t]*,)*\\):");
+        Pattern function=Pattern.compile("[\\s\\t]*(function)[\\s\\t]+[A-Za-z0-9]+[\\s\\t]*\\((([\\s\\t]*\\$[A-Za-z0-9]+[\\s\\t]*)(\\,[\\s\\t]*\\$[A-Za-z0-9]+[\\s\\t]*)*)?\\):[\\s\\t]*");
 
 
         //for(String line:lines){
@@ -82,7 +82,7 @@ public class Parser {
                         }
                     }
 
-                    i=j-1;
+                    i=j-2;
 
                     functions.add(Function.createFunction(func,code));
 
@@ -103,8 +103,13 @@ public class Parser {
     private int getLevel(String line){
         int count=0;
 
-        while (line.charAt(count+1)=='\t'){
-            count++;
+        while (count<line.length()){
+            if(line.charAt(count)=='\t') {
+                count++;
+            }
+            else {
+                break;
+            }
         }
 
         return count;
@@ -171,6 +176,12 @@ public class Parser {
             }
             else
         }*/
+
+        String l2=line.replace("\\s","");
+        l2=l2.replace("\\t","");
+        if(l2.equals("")){
+            return "";
+        }
 
         if(!line.matches("[\\s\\t0-9\\+\\-\\*\\/\\(\\)]+"))
         {

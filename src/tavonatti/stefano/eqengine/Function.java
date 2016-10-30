@@ -33,7 +33,7 @@ public class Function extends Parser {
 
         Pattern removeFunction=Pattern.compile("[\\s\\t]*function");
         Matcher removeFunctionMatcher=removeFunction.matcher(name);
-        code=removeFunctionMatcher.replaceFirst("");
+        name=removeFunctionMatcher.replaceFirst("");
         int index=name.indexOf("(");
 
         if(index==-1){
@@ -79,7 +79,7 @@ public class Function extends Parser {
     }
 
 
-    public String eval(HashMap<String,String> vars) throws UndefinedVariable, ParsingException {
+    public String eval(HashMap<String,String> vars) throws UndefinedVariable, ParsingException, ScriptException, DublicatedVariableException {
         return  super.eval(getCode(),vars);
     }
 
