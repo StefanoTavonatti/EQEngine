@@ -61,7 +61,7 @@ public class Parser {
     }
 
     private String evalLine(String line, HashMap<String,String> vars) throws UndefinedVariable, ParsingException {
-        Pattern variables=Pattern.compile("(\\s*\\t*[A-Za-z0-9]+\\s*\\t*=)");
+        Pattern variables=Pattern.compile("([\\s\\t]*[A-Za-z0-9]+[\\s\\t]*=)");
 
         Matcher matcher=variables.matcher(line);
 
@@ -108,6 +108,25 @@ public class Parser {
     }
 
     private String evalEQ(String line) throws ParsingException {//TODO custom engine, check special chars
+
+        /*if(line.contains("(")){
+
+        }
+        else{
+            Pattern mul=Pattern.compile("[0-9]+(\\.[0-9]+)?[\\s\\t]*\\*[\\s\\t]*[0-9]+(\\.[0-9]+)?");
+            Matcher mulMatcher=mul.matcher(line);
+            if(mulMatcher.find()){
+                String temp=mulMatcher.group(0);
+                line=line.replace(temp,evalEQ(temp));
+            }
+            else
+        }*/
+
+        if(!line.matches("[\\s\\t0-9\\+\\-\\*\\/\\(\\)]+"))
+        {
+            throw new ParsingException();
+        }
+
         try {
             return engine.eval(line).toString();
         } catch (ScriptException e) {
