@@ -1,6 +1,5 @@
-package tavonatti.stefano.eqengine.tests;
+package tavonatti.stefano.eqengine.test;
 
-import org.junit.Assert;
 import org.junit.Test;
 import tavonatti.stefano.eqengine.Parser;
 
