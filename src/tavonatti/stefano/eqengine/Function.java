@@ -2,11 +2,13 @@ package tavonatti.stefano.eqengine;
 
 import tavonatti.stefano.eqengine.exceptions.DublicatedVariableException;
 import tavonatti.stefano.eqengine.exceptions.ParsingException;
+import tavonatti.stefano.eqengine.exceptions.UndefinedFunctionException;
 import tavonatti.stefano.eqengine.exceptions.UndefinedVariable;
 
 import javax.script.ScriptException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -18,9 +20,9 @@ public class Function extends Parser {
 
     private String name;
     private String code;
-    private HashMap<String,String> arguments;
+    private List<String> arguments;//add a ArrayList to remember the order
 
-    private Function(String name,HashMap<String,String> args,String code) throws ScriptException {
+    private Function(String name, List<String> args,String code) throws ScriptException {
         super();
         this.setName(name);
         this.setCode(code);
@@ -40,22 +42,25 @@ public class Function extends Parser {
             return null;
         }
 
-        String functionName=name.substring(0,index);
+        String functionName=name.substring(0,index).replaceAll(" ","").replaceAll("\t","");
+
 
         Pattern variables=Pattern.compile("\\$[A-Za-z0-9]+");
         Matcher variablesMatcher=variables.matcher(name);
 
-        HashMap<String,String> args=new HashMap<>();
+        HashMap<String,String> argsCheck=new HashMap<>();
+        List<String> args=new ArrayList<>();
 
         while (variablesMatcher.find()){
             String temp=variablesMatcher.group(0);
             temp=temp.substring(1);
 
-            if(args.get(temp)!=null){
+            if(argsCheck.get(temp)!=null){
                 throw new DublicatedVariableException("Duplicate variable in "+functionName+" function declaration");
             }
 
-            args.put(temp,"");
+            argsCheck.put(temp,"");
+            args.add(temp);
         }
 
 
@@ -79,11 +84,24 @@ public class Function extends Parser {
     }
 
 
-    public String eval(HashMap<String,String> vars) throws UndefinedVariable, ParsingException, ScriptException, DublicatedVariableException {
+    public String eval(HashMap<String,String> vars) throws UndefinedVariable, ParsingException, ScriptException, DublicatedVariableException, UndefinedFunctionException {
         return  super.eval(getCode(),vars);
     }
 
-    public HashMap<String,String> getArguments() {
+    public String eval(List<String> vars) throws ParsingException, DublicatedVariableException, UndefinedVariable, UndefinedFunctionException, ScriptException {
+        if(vars.size()!=getArguments().size())
+            throw new ParsingException();
+
+        HashMap<String,String> args=new HashMap<>();
+
+        for (int i=0;i<vars.size();i++){
+            args.put(getArguments().get(i),vars.get(i));
+        }
+
+        return eval(args);
+    }
+
+    public  List<String> getArguments() {
         return arguments;
     }
 }

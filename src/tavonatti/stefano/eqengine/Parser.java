@@ -2,6 +2,7 @@ package tavonatti.stefano.eqengine;
 
 import tavonatti.stefano.eqengine.exceptions.DublicatedVariableException;
 import tavonatti.stefano.eqengine.exceptions.ParsingException;
+import tavonatti.stefano.eqengine.exceptions.UndefinedFunctionException;
 import tavonatti.stefano.eqengine.exceptions.UndefinedVariable;
 
 import javax.script.ScriptEngine;
@@ -9,6 +10,7 @@ import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -27,12 +29,12 @@ public class Parser {
         //Object result = engine.eval("4*5");
     }
 
-    public String eval(String script) throws UndefinedVariable, ParsingException, ScriptException, DublicatedVariableException {
+    public String eval(String script) throws UndefinedVariable, ParsingException, ScriptException, DublicatedVariableException, UndefinedFunctionException {
         HashMap<String,String> hm=new HashMap<>();
         return eval(script,hm);
     }
 
-    public String eval(String script, HashMap<String,String> args) throws UndefinedVariable, ParsingException, ScriptException, DublicatedVariableException {
+    public String eval(String script, HashMap<String,String> args) throws UndefinedVariable, ParsingException, ScriptException, DublicatedVariableException, UndefinedFunctionException {
         String lines[]=script.split("\n");
 
         //Pattern function=Pattern.compile("\\s*\\t*function\\s*\\t*[A-Za-z]+\\([A-Za-z]\\)");
@@ -115,7 +117,7 @@ public class Parser {
         return count;
     }
 
-    private String evalLine(String line, HashMap<String,String> vars) throws UndefinedVariable, ParsingException {
+    private String evalLine(String line, HashMap<String,String> vars) throws UndefinedVariable, ParsingException, UndefinedFunctionException, ScriptException, DublicatedVariableException {
         Pattern variables=Pattern.compile("([\\s\\t]*[A-Za-z0-9]+[\\s\\t]*=)");
 
         Matcher matcher=variables.matcher(line);
@@ -128,6 +130,7 @@ public class Parser {
             line=line.replace(variable,"");
             line=replaceVariableWithValues(line,vars);
             String result=evalEQ(line);
+            variable=variable.replaceAll(" ","").replaceAll("\t","");
             vars.put(variable.substring(0,variable.length()-1),result);
             return result;
 
@@ -162,7 +165,7 @@ public class Parser {
         return line;
     }
 
-    private String evalEQ(String line) throws ParsingException {//TODO custom engine, check special chars
+    private String evalEQ(String line) throws ParsingException, UndefinedFunctionException, DublicatedVariableException, ScriptException, UndefinedVariable {//TODO custom engine, check special chars
 
         /*if(line.contains("(")){
 
@@ -177,8 +180,38 @@ public class Parser {
             else
         }*/
 
-        String l2=line.replace("\\s","");
-        l2=l2.replace("\\t","");
+        Pattern functionCall=Pattern.compile("[A-Za-z0-9]+[\\s\\t]*\\((([\\s\\t]*[A-Za-z0-9]+[\\s\\t]*)(\\,[\\s\\t]*[A-Za-z0-9]+[\\s\\t]*)*)?\\)");
+        Matcher functionCallMatcher=functionCall.matcher(line);
+
+        while(functionCallMatcher.find()){
+            String call=functionCallMatcher.group(0);
+            String originalCall=call;
+
+            String name=call.substring(0,call.indexOf("("));
+            name=name.replaceAll(" ","").replaceAll("\t","");
+            Function f=getFunctionByName(name);
+            List<String> args=new ArrayList<>();
+            call=call.substring(call.indexOf("("));
+
+            Pattern argsPattern=Pattern.compile("[0-9\\.]+");
+            Matcher argsMatcher=argsPattern.matcher(call);
+
+            while (argsMatcher.find()){
+                String temp=argsMatcher.group(0);
+                args.add(temp);
+            }
+
+            Matcher replaceMatcher=functionCall.matcher(line);
+
+            line=replaceMatcher.replaceFirst(f.eval(args));
+
+            //line=line.replaceFirst(originalCall,f.eval(args));
+            //f.eval(args);
+
+        }
+
+        String l2=line.replaceAll("\\s","");
+        l2=l2.replaceAll("\t","");
         if(l2.equals("")){
             return "";
         }
@@ -194,6 +227,18 @@ public class Parser {
 
             throw new ParsingException();
         }
+    }
+
+    private Function getFunctionByName(String name) throws UndefinedFunctionException {
+        Iterator<Function> it=functions.iterator();
+
+        while (it.hasNext()){
+            Function f=it.next();
+            if(f.getName().equals(name))
+                return f;
+        }
+
+        throw new UndefinedFunctionException("Function "+name+" not defined");
     }
 
 }
