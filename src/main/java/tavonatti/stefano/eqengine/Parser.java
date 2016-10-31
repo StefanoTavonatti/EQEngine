@@ -181,6 +181,8 @@ public class Parser {
         }*/
 
         Pattern functionCall=Pattern.compile("[A-Za-z0-9]+[\\s\\t]*\\((([\\s\\t]*[A-Za-z0-9]+[\\s\\t]*)(\\,[\\s\\t]*[A-Za-z0-9]+[\\s\\t]*)*)?\\)");
+
+
         Matcher functionCallMatcher=functionCall.matcher(line);
 
         while(functionCallMatcher.find()){
@@ -193,7 +195,7 @@ public class Parser {
             List<String> args=new ArrayList<>();
             call=call.substring(call.indexOf("("));
 
-            Pattern argsPattern=Pattern.compile("[0-9\\.]+");
+            Pattern argsPattern=Pattern.compile("[0-9]+");
             Matcher argsMatcher=argsPattern.matcher(call);
 
             while (argsMatcher.find()){
@@ -204,6 +206,7 @@ public class Parser {
             Matcher replaceMatcher=functionCall.matcher(line);
 
             line=replaceMatcher.replaceFirst(f.eval(args));
+            functionCallMatcher=functionCall.matcher(line);
 
             //line=line.replaceFirst(originalCall,f.eval(args));
             //f.eval(args);
