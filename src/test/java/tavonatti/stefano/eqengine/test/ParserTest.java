@@ -32,5 +32,14 @@ public class ParserTest {
         assertEquals("sum must be 7",result,7);
     }
 
+    @Test
+    public void evalSimpleBoolean() throws Exception{
+        Parser parser=new Parser();
+        String result=parser.eval("return 2>1");
+        System.out.println("2>1: "+result);
+        boolean res= Boolean.parseBoolean(result);
+        assertEquals("2>1 must be true",res,true);
+    }
+
 
 }

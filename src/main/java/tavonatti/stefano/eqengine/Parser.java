@@ -216,7 +216,7 @@ public class Parser {
             return "";
         }
 
-        if(!line.matches("[\\s\\t0-9\\+\\-\\*\\/\\(\\)]+"))
+        if(!line.matches("[\\s\\t0-9\\+\\-\\*\\/\\(\\)=<>!]+"))
         {
             throw new ParsingException();
         }
