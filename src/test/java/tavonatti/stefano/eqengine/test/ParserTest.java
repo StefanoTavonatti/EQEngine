@@ -2,7 +2,9 @@ package tavonatti.stefano.eqengine.test;
 
 import org.junit.Test;
 import tavonatti.stefano.eqengine.Parser;
+import tavonatti.stefano.eqengine.exceptions.ParsingException;
 
+import java.text.ParseException;
 import java.util.HashMap;
 
 import static org.junit.Assert.*;
@@ -48,6 +50,24 @@ public class ParserTest {
         System.out.println("2>1: "+result);
         boolean res= Boolean.parseBoolean(result);
         assertEquals("2>1 must be true",res,true);
+    }
+
+    @Test
+    public void ifElse() throws Exception{
+        Parser parser=new Parser();
+        String result=parser.eval("arg=-1\nif $arg>3:\n\treturn 22\n else\n\targ=$arg-1\n\treturn 16+$arg");
+        System.out.println("resulte simple if "+result);
+        int res=Integer.parseInt(result);
+        assertEquals("result mus be 14",res,14);
+    }
+
+    @Test(expected = ParsingException.class)
+    public void ifElseNONbool() throws Exception{
+
+        Parser parser=new Parser();
+        String result=parser.eval("arg=-1\nif $arg+3:\n\treturn 22\n else\n\treturn 15+$arg");
+        System.out.println("resulte simple if "+result);
+
     }
 
 

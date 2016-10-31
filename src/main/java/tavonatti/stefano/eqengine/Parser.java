@@ -52,6 +52,7 @@ public class Parser {
         //match function like function name($arg1,$arg2,..):
         Pattern function=Pattern.compile("[\\s\\t]*(function)[\\s\\t]+[A-Za-z0-9]+[\\s\\t]*\\((([\\s\\t]*\\$[A-Za-z0-9]+[\\s\\t]*)(\\,[\\s\\t]*\\$[A-Za-z0-9]+[\\s\\t]*)*)?\\):[\\s\\t]*");
 
+        Pattern ifPattern=Pattern.compile("[\\t\\s]*if[\\t\\sA-Za-z0-9\\$\\(\\)\\.\\,=<>!]*:");
 
         //for(String line:lines){
         for(int i=0;i<lines.length;i++){
@@ -65,6 +66,7 @@ public class Parser {
             }
             else{
                 Matcher funcMatcher=function.matcher(line);
+                Matcher ifMatcher=ifPattern.matcher(line);
                 if(funcMatcher.find()){
                     String func=funcMatcher.group(0);
                     int funcLevel=getLevel(func);
@@ -89,7 +91,46 @@ public class Parser {
                     functions.add(Function.createFunction(func,code));
 
                 }
-                else {
+                else if (ifMatcher.find()) {
+                    String cond=line;
+                    String ifcode="";
+                    String elsecode="";
+                    int rootLevel=getLevel(line);
+                    int j=i;
+                    boolean cont=true;
+                    boolean elseB=false;
+
+                    for(j=i+1;j<lines.length&&cont;j++){
+                        line=lines[j];
+                        if(getLevel(line)>rootLevel){
+                            if(!elseB){
+                                ifcode+=line+"\n";
+                            }else {
+                                elsecode+=line+"\n";
+                            }
+                        }
+                        else if(getLevel(line)==rootLevel){
+                            if(!elseB) {
+                                if (line.contains("else")) {
+                                    elseB = true;
+                                }
+                                else {
+                                    cont=false;
+                                }
+                            }
+                            else {
+                                cont=false;
+                            }
+                        }
+                        else{
+                            throw new ParsingException();
+                        }
+                    }
+                    i=j-2;
+
+                    IfElse.createIfElse(ifcode,elsecode,cond).eval(args);
+                }
+                else{
                     evalLine(line, args);
                 }
             }
@@ -180,7 +221,7 @@ public class Parser {
             else
         }*/
 
-        Pattern functionCall=Pattern.compile("[A-Za-z0-9]+[\\s\\t]*\\((([\\s\\t]*[A-Za-z0-9]+[\\s\\t]*)(\\,[\\s\\t]*[A-Za-z0-9]+[\\s\\t]*)*)?\\)");
+        Pattern functionCall=Pattern.compile("[A-Za-z0-9]+[\\s\\t]*\\((([\\s\\t]*[A-Za-z0-9\\-\\.]+[\\s\\t]*)(\\,[\\s\\t]*[A-Za-z0-9\\-\\.]+[\\s\\t]*)*)?\\)");
 
 
         Matcher functionCallMatcher=functionCall.matcher(line);
