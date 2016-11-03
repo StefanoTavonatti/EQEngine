@@ -61,6 +61,15 @@ public class ParserTest {
         assertEquals("result mus be 14",res,14);
     }
 
+    @Test
+    public void ifElseTrue() throws Exception{
+        Parser parser=new Parser();
+        String result=parser.eval("arg=-1\nif $arg<3:\n\treturn 22\n else\n\targ=$arg-1\n\treturn 16+$arg");
+        System.out.println("resulte simple if true: "+result);
+        int res=Integer.parseInt(result);
+        assertEquals("result mus be 15",res,15);
+    }
+
     @Test(expected = ParsingException.class)
     public void ifElseNONbool() throws Exception{
 
@@ -70,5 +79,28 @@ public class ParserTest {
 
     }
 
+    @Test
+    public void whileSimple() throws Exception{
+
+        Parser parser=new Parser();
+        String result=parser.eval("arg=1\nwhile $arg<3:\n\targ=$arg+1\nreturn $arg");
+        System.out.println("resulte simple while "+result);
+
+        int res=Integer.parseInt(result);
+        assertEquals("arg value must be 3",res,3);
+
+    }
+
+    @Test
+    public void whileSimple2() throws Exception{
+
+        Parser parser=new Parser();
+        String result=parser.eval("arg=1\nwhile $arg<3:\n\targ=$arg+2\n\targ=$arg-1\nreturn $arg");
+        System.out.println("resulte simple while "+result);
+
+        int res=Integer.parseInt(result);
+        assertEquals("arg value must be 3",res,3);
+
+    }
 
 }

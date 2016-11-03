@@ -47,12 +47,16 @@ public class Parser {
             System.out.println(t.group(0));
         }*/
 
+        String lastResult="";
 
         Pattern returnPatter=Pattern.compile("return");
         //match function like function name($arg1,$arg2,..):
         Pattern function=Pattern.compile("[\\s\\t]*(function)[\\s\\t]+[A-Za-z0-9]+[\\s\\t]*\\((([\\s\\t]*\\$[A-Za-z0-9]+[\\s\\t]*)(\\,[\\s\\t]*\\$[A-Za-z0-9]+[\\s\\t]*)*)?\\):[\\s\\t]*");
 
+        //looks for if-else contruct in code
         Pattern ifPattern=Pattern.compile("[\\t\\s]*if[\\t\\sA-Za-z0-9\\$\\(\\)\\.\\,=<>!]*:");
+
+        Pattern whilePattern=Pattern.compile("[\\t\\s]*while[\\t\\sA-Za-z0-9\\$\\(\\)\\.\\,=<>!]*:");
 
         //for(String line:lines){
         for(int i=0;i<lines.length;i++){
@@ -67,6 +71,7 @@ public class Parser {
             else{
                 Matcher funcMatcher=function.matcher(line);
                 Matcher ifMatcher=ifPattern.matcher(line);
+                Matcher whileMatcher=whilePattern.matcher(line);
                 if(funcMatcher.find()){
                     String func=funcMatcher.group(0);
                     int funcLevel=getLevel(func);
@@ -130,13 +135,33 @@ public class Parser {
 
                     IfElse.createIfElse(ifcode,elsecode,cond).eval(args);
                 }
+                else if(whileMatcher.find()){
+                    String cond=line;
+                    String whileCode="";
+                    int rootLevel=getLevel(line);
+                    int j=i;
+                    boolean cont=true;
+
+                    for(j=i+1;j<lines.length&&cont;j++){
+                        line=lines[j];
+                        if(getLevel(line)>rootLevel){
+                            whileCode+=line+"\n";
+                        }
+                        else{
+                            cont=false;
+                        }
+                    }
+                    i=j-2;
+
+                    While.createWhile(cond,whileCode).eval(args);
+                }
                 else{
-                    evalLine(line, args);
+                    lastResult=evalLine(line, args);
                 }
             }
         }
 
-        return null;
+        return lastResult;
     }
 
     /**
