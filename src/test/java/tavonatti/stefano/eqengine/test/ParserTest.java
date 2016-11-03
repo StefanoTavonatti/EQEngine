@@ -103,4 +103,13 @@ public class ParserTest {
 
     }
 
+    @Test(expected = ParsingException.class)
+    public void WhileNONbool() throws Exception{
+
+        Parser parser=new Parser();
+        String result=parser.eval("arg=1\nwhile $arg+1:\n\targ=$arg+1\nreturn $arg");
+        System.out.println("resulte simple if "+result);
+
+    }
+
 }
